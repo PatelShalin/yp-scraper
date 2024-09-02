@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "yp-scraper"
+version = "0.1.0"
+description = "A selenium powered webscraper designed to scrape Names and Phone Numbers from businesses within a given city."
+authors = ["Shalin Patel <42554035+PatelShalin@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+selenium = "^4.24.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
