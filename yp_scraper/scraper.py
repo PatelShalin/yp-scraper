@@ -9,7 +9,7 @@ from selenium.webdriver.common import by
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
 def scrape(city: str):
     timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
@@ -57,20 +57,27 @@ def scrape(city: str):
             with open(csv_path, mode='w', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow(["Name", "Phone Number"])
-                listing_phone_numbers = driver.find_elements(by.By.XPATH, '//*[@title="Get the Phone Number"]')
                 page = True
                 while page:
-                    for i, listing in enumerate(listings):
+                    for listing in listings:
                         listing_name = listing.find_element(by.By.CLASS_NAME, "listing__name").text
-                        listing_phone_number = listing_phone_numbers[i].get_attribute('data-phone')
-                        writer.writerow([listing_name, listing_phone_number])
+                        try:
+                            listing_phone_bubble = listing.find_element(by.By.CLASS_NAME, "jsMapBubblePhone")
+                            listing_phone_bubble.click()
+                            listing_phone_items = listing_phone_bubble.find_elements(by.By.CLASS_NAME, "mlr__submenu__item")
+                            phone_numbers = ""
+                            for listing_phone_item in listing_phone_items:
+                                listing_phone_h4 = listing_phone_item.find_element(by.By.XPATH, "h4")
+                                phone_numbers += listing_phone_h4.text + " "
+                            writer.writerow([listing_name, phone_numbers])
+                        except NoSuchElementException:
+                            writer.writerow([listing_name, ""])
                     next_page_div = driver.find_element(by.By.CLASS_NAME, "view_more_section_noScroll")
                     next_page_a = next_page_div.find_elements(by.By.XPATH, "a")
                     if next_page_a and next_page_a[-1].text == "Next >>":
                         next_page_url = next_page_a[-1].get_attribute("href")
                         driver.get(next_page_url)
                         listings = driver.find_elements(by.By.CLASS_NAME, "listing")
-                        listing_phone_numbers = driver.find_elements(by.By.XPATH, '//*[@title="Get the Phone Number"]')
                         page = True
                     else:
                         page = False
